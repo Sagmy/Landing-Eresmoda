@@ -1,0 +1,166 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   Tokens de diseño · editorial minimal
+   ==========================================================================
+   Blanco, negro y un neutro cálido. La foto de la prenda es la protagonista;
+   todo lo demás se aparta. Los colores llevan una pizca de amarillo (hue ~70)
+   en vez de ser grises puros: sobre fotos de ropa, un gris frío se ve barato.
+   ========================================================================== */
+@theme {
+  --color-lienzo: oklch(98.6% 0.004 75);
+  --color-superficie: oklch(100% 0 0);
+  --color-arena: oklch(95.5% 0.011 75);
+  --color-borde: oklch(91% 0.006 75);
+  --color-borde-fuerte: oklch(83% 0.008 75);
+
+  --color-tinta: oklch(19% 0.008 60);
+  --color-tinta-suave: oklch(46% 0.008 60);
+  --color-tinta-tenue: oklch(64% 0.008 60);
+
+  /* El acento de una tienda editorial es el propio negro. */
+  --color-marca: oklch(19% 0.008 60);
+  --color-marca-contra: oklch(100% 0 0);
+
+  /* El dorado del logo. Se usa en la marca; queda disponible por si algún día
+     se quiere acentuar algo más con el color de la casa. */
+  --color-oro: oklch(64% 0.072 74);
+
+  /* Verde de WhatsApp, calibrado para no gritar sobre el fondo claro. */
+  --color-whatsapp: oklch(58% 0.14 152);
+
+  --radius-caja: 0.5rem;
+
+  --font-display: var(--fuente-display), Georgia, 'Times New Roman', serif;
+  --font-sans: var(--fuente-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* Tailwind 4 no admite `@theme` dentro de un `@media`: aplanaría estos valores
+   en :root y el tema oscuro pisaría al claro siempre. Las utilidades generadas
+   apuntan a var(--color-x), así que basta con redefinir las variables aquí. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-lienzo: oklch(15% 0.006 70);
+    --color-superficie: oklch(19% 0.007 70);
+    --color-arena: oklch(23% 0.009 70);
+    --color-borde: oklch(27% 0.008 70);
+    --color-borde-fuerte: oklch(36% 0.01 70);
+
+    --color-tinta: oklch(96% 0.004 75);
+    --color-tinta-suave: oklch(74% 0.007 75);
+    --color-tinta-tenue: oklch(58% 0.008 75);
+
+    --color-marca: oklch(96% 0.004 75);
+    --color-marca-contra: oklch(15% 0.006 70);
+
+    /* Sobre fondo oscuro el dorado tiene que subir de luminosidad o se apaga. */
+    --color-oro: oklch(78% 0.075 74);
+
+    --color-whatsapp: oklch(72% 0.15 152);
+  }
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+html {
+  color-scheme: light dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-lienzo);
+  color: var(--color-tinta);
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Las cifras de dinero alineadas en columna se leen mucho mejor. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Fila de categorías: se arrastra con el dedo sin barra a la vista. */
+.sin-barra {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.sin-barra::-webkit-scrollbar {
+  display: none;
+}
+
+/* La foto entra suave en cuanto carga, en vez de aparecer de golpe. */
+.foto-entra {
+  animation: aparecer 0.4s ease-out;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.panel-entra {
+  animation: deslizar 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes deslizar {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 640px) {
+  @keyframes deslizar {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
+/* Quien pide menos movimiento, no lo recibe. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .foto-entra,
+  .panel-entra {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Pantallas táctiles
+   ==========================================================================
+   Copiado del inventario, y aquí importa aún más: casi todo el mundo entra a
+   una tienda como esta desde el celular. */
+@media (pointer: coarse) {
+  button,
+  a[role='button'],
+  [type='submit'] {
+    min-height: 44px;
+  }
+
+  /* Safari en iOS hace zoom automático al enfocar un campo cuya letra mida
+     menos de 16px, y luego deja la página ampliada. Forzando 16px en pantallas
+     táctiles, el zoom no se dispara. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-tinta);
+  outline-offset: 2px;
+}
