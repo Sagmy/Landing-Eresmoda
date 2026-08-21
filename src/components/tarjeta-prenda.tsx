@@ -1,6 +1,7 @@
 'use client';
 
 import { formatMoney } from '@/lib/money';
+import { esGenerico } from '@/lib/prendas';
 import { cn } from '@/lib/utils';
 import type { Prenda } from '@/types/catalogo';
 import { FotoPrenda } from '@/components/foto-prenda';
@@ -25,10 +26,28 @@ export function TarjetaPrenda({ prenda, prioridad, onAbrir }: Props) {
   const agotada = !prenda.disponible;
   const portada = prenda.imagenes[0] ?? null;
 
-  // Ni la marca ni el color se imprimen si no aportan: "Color: Único" es un
-  // marcador interno de la base, no un dato de la prenda. La misma línea sirve
-  // para lo que se ve y para lo que anuncia el lector de pantalla.
-  const detalle = [prenda.marca, prenda.colorEtiqueta].filter(Boolean).join(' · ');
+  // El color no se imprime si no aporta: "Único" es un marcador interno de la
+  // base, no un dato de la prenda.
+  const color = prenda.colorEtiqueta;
+
+  // La marca cede su sitio a las tallas. Recorriendo la parrilla, lo que decide
+  // si vale la pena abrir una prenda es si está tu talla, no de quién es; la
+  // marca sigue en la ficha y viaja en el pedido de WhatsApp.
+  const reales = prenda.tallas.filter((t) => !esGenerico(t));
+
+  // "Única" no se pinta tal cual —es el marcador de la base—, pero tampoco se
+  // calla: en una tarjeta cuyo trabajo es responder "¿está mi talla?", un hueco
+  // deja peor al cliente que un "Talla única". Solo la agotada va sin línea,
+  // que para eso lleva su sello encima de la foto.
+  //
+  // La palabra delante no sobra: casi todo el catálogo tiene una sola talla, y
+  // una "S" suelta bajo el color no se lee como talla.
+  const lineaTallas =
+    reales.length > 0
+      ? `${reales.length === 1 ? 'Talla' : 'Tallas'} ${reales.join(' · ')}`
+      : prenda.tallas.length > 0
+        ? 'Talla única'
+        : null;
 
   const contenido = (
     <>
@@ -51,7 +70,13 @@ export function TarjetaPrenda({ prenda, prioridad, onAbrir }: Props) {
       <div className="mt-2.5 space-y-0.5">
         <h3 className="text-sm leading-snug font-medium text-tinta">{prenda.nombre}</h3>
 
-        <p className="text-xs text-tinta-tenue">{detalle === '' ? ' ' : detalle}</p>
+        {/* Las dos líneas se pintan siempre, aunque vayan vacías, para que el
+            precio quede a la misma altura en todas las tarjetas de la fila. El
+            relleno es un espacio duro: uno normal lo colapsa el navegador y la
+            línea se quedaría sin alto. */}
+        <p className="text-xs text-tinta-tenue">{color ?? ' '}</p>
+
+        <p className="text-xs text-tinta-suave">{lineaTallas ?? ' '}</p>
 
         <p className={cn('tabular pt-0.5 text-sm', agotada ? 'text-tinta-tenue' : 'text-tinta')}>
           {formatMoney(prenda.precioCents)}
@@ -70,10 +95,13 @@ export function TarjetaPrenda({ prenda, prioridad, onAbrir }: Props) {
 
   const nombreAccesible = [
     prenda.nombre,
-    detalle,
+    color,
+    // Separadas por comas: el "·" de la línea visible el lector de pantalla lo
+    // lee como "punto medio" o se lo salta, y las tallas salen pegadas.
+    reales.length > 1 ? lineaTallas?.replace(/ · /g, ', ') ?? null : lineaTallas,
     `${formatMoney(prenda.precioCents)}. Ver tallas y agregar`,
   ]
-    .filter((parte) => parte !== '')
+    .filter((parte): parte is string => parte !== null && parte !== '')
     .join(', ');
 
   return (
